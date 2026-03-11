@@ -10,46 +10,47 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-
     permissions:
       contents: write
       actions: read
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Create build directory
-        run: mkdir build
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
-      
-      - name: Build with MSBuild
-        run: msbuild ExampleUnit.sln -p:Configuration=Release
-        
-      - name: Run tests
-        working-directory: build
-        run: ctest -C Release --output-on-failure --test-output-size-passed 1024
+
+      - name: Setup Visual Studio environment (x64)
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Build Solution (Release, x64)
+        run: |
+          msbuild example_unit.sln /p:Configuration=Release /p:Platform=x64
+
+      - name: Run C++ tests with VSTest
+        run: |
+          vstest.console.exe x64/Release/TEST.dll /Platform:x64 /Logger:trx
         continue-on-error: true
+        shell: cmd
 
       - name: Upload test logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-logs-${{ github.run_id }}
-          path: build/Testing/Temporary/
+          path: TestResults/
           retention-days: 30
 
       - name: Prepare artifacts
         shell: powershell
         run: |
           New-Item -ItemType Directory -Path artifacts -Force
-          Copy-Item -Path build/Release/*.exe -Destination artifacts/ -ErrorAction SilentlyContinue
-          Copy-Item -Path build/Release/*.dll -Destination artifacts/ -ErrorAction SilentlyContinue
-          Copy-Item -Path build/Release/*.pdb -Destination artifacts/ -ErrorAction SilentlyContinue
+          Copy-Item -Path x64/Release/*.exe -Destination artifacts/ -ErrorAction SilentlyContinue
+          Copy-Item -Path x64/Release/*.dll -Destination artifacts/ -ErrorAction SilentlyContinue
+          Copy-Item -Path x64/Release/*.pdb -Destination artifacts/ -ErrorAction SilentlyContinue
 
       - name: Create archive
         shell: powershell
@@ -67,7 +68,9 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: project-windows.zip
+          files: |
+            project-windows.zip
+            x64/Release/ExampleUnit.exe
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
