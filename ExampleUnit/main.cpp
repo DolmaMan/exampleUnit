@@ -4,7 +4,7 @@ using namespace std;
 
 int main()
 {
-	Person p = { "RomaFacts", 35, Person::MALE };
+	Person p = { "FinalVersion", 35, Person::MALE };
 
 	cout << p.GetName() << endl;
 }
