@@ -1,0 +1,54 @@
+name: C/C++ CI with artifacts and releases
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      actions: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: configure
+        run: ./configure
+
+      - name: make
+        run: make
+
+      - name: make check
+        run: make check
+
+      - name: make distcheck
+        run: make distcheck
+
+      - name: Find distribution archive
+        id: find_archive
+        run: |
+          archive=$(ls *.tar.gz | head -n1)
+          echo "archive=$archive" >> $GITHUB_OUTPUT
+          echo "Found archive: $archive"
+
+      - name: Upload distribution artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: distribution-${{ github.run_id }}
+          path: ${{ steps.find_archive.outputs.archive }}
+          retention-days: 30
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.find_archive.outputs.archive }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
