@@ -6,7 +6,6 @@ jobs:
   build-and-test:
     # Use a Windows runner as the tests depend on the Visual Studio environment
     runs-on: windows-latest
-<<<<<<< HEAD
 
     steps:
     - name: Checkout repository
@@ -37,7 +36,7 @@ jobs:
       with:
         name: test-results
         path: 'tests/latest.trx' # Upload the .trx results file
-=======
+
     permissions:
       contents: write
       actions: read
@@ -102,4 +101,3 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
->>>>>>> 4887d664891c36adb4bab15e2975d682105ae4df
