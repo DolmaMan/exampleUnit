@@ -1,15 +1,43 @@
-name: Windows CI/CD with artifacts and releases
+name: Windows C++ CI
 
-on:
-  push:
-    branches: [ "main" ]
-    tags: [ 'v*' ]
-  pull_request:
-    branches: [ "main" ]
+on: [push, pull_request]
 
 jobs:
-  build:
+  build-and-test:
+    # Use a Windows runner as the tests depend on the Visual Studio environment
     runs-on: windows-latest
+<<<<<<< HEAD
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Setup Visual Studio environment
+      # This action sets up the necessary environment variables for MSVC build tools
+      uses: ilammy/msvc-dev-cmd@v1.4.1
+      # You can specify the architecture, e.g., 'x64' or 'x86'
+      with:
+        arch: x64
+
+    - name: Build Solution
+      # Use MSBuild to compile the entire solution, including the test projects
+      run: msbuild ExampleUnit.sln /p:Configuration=Debug /p:Platform=x64
+
+    - name: Run C++ tests with VSTest
+      # Use the path found in the previous step
+      run:  vstest.console.exe x64/debug/Test.dll /Platform:x64 /Logger:trx
+      # The VSTest action marketplace has some issues/deprecations, so manual execution is safer
+      shell: cmd
+      
+    - name: Upload test results artifact (optional)
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: 'tests/latest.trx' # Upload the .trx results file
+=======
     permissions:
       contents: write
       actions: read
@@ -74,3 +102,4 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+>>>>>>> 4887d664891c36adb4bab15e2975d682105ae4df
