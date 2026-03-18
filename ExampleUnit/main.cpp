@@ -4,7 +4,7 @@ using namespace std;
 
 int main()
 {
-	Person p = { "Commit No version", 35, Person::MALE };
+	Person p = { "Commit No version v2", 35, Person::MALE };
 
 	cout << p.GetName() << endl;
 }
